@@ -18,14 +18,31 @@ class PhotoDetailViewController: UIViewController {
     
     @IBAction func save(_ sender: Any) {
         guard let image = imageView.image else { return }
-        PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.creationRequestForAsset(from: image)
-        }, completionHandler: { (success, error) in
-            if let error = error {
-                NSLog("Error saving photo: \(error)")
-                return
+        
+        // Do we have permission to access the photo library?
+        PHPhotoLibrary.requestAuthorization { (authorizationResult) in
+            switch authorizationResult {
+            case .authorized:
+                PHPhotoLibrary.shared().performChanges({
+                    PHAssetChangeRequest.creationRequestForAsset(from: image)
+                }, completionHandler: { (success, error) in
+                    if let error = error {
+                        NSLog("Error saving photo: \(error)")
+                        return
+                    }
+                })
+            case .denied:
+                break
+            case .notDetermined:
+                break
+                
+            case .restricted:
+                break
             }
-        })
+        }
+        
+        // The first time the user taps save button, we do not have permission to access the library.
+        
     }
     
     // MARK: - Private

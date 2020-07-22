@@ -65,7 +65,19 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDataSour
         return cell
     }
     
+    // Is executing when the cells are disappearing
     func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        
+        // photoReferences is empty
+        // We're trying to access "indexPath.item = 6"
+        // Accessing an index that does not exist in an array, will crash
+        // array = [1,2,3]
+        // array[3] = will crash because we trying to access the 4th position. Arrays index start at 0.
+        
+     //   guard indexPath.item < photoReferences.count else { return }
+        
+        
+        
         let photoRef = photoReferences[indexPath.item]
         operations[photoRef.id]?.cancel()
     }
@@ -184,7 +196,10 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDataSour
         didSet {
             if let rover = roverInfo,
                 let sol = solDescription?.sol {
-                photoReferences = []
+                // Setting photo references to a empty array
+                // Why are we setting "photoReference" to []? We have a new sol (we change the page), remove that sol images
+                // However, this is removing the source of the cells (image)
+               // photoReferences = []
                 client.fetchPhotos(from: rover, onSol: sol) { (photoRefs, error) in
                     if let e = error { NSLog("Error fetching photos for \(rover.name) on sol \(sol): \(e)"); return }
                     self.photoReferences = photoRefs ?? []
@@ -194,6 +209,8 @@ class PhotosCollectionViewController: UIViewController, UICollectionViewDataSour
         }
     }
     private var photoReferences = [MarsPhotoReference]() {
+        
+        // What does "didSet" do? Executes after a new value is passed to "photoReferences"
         didSet {
             DispatchQueue.main.async { self.collectionView?.reloadData() }
         }

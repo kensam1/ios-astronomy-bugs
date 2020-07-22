@@ -14,9 +14,16 @@ class MarsRoverClient {
                         using session: URLSession = URLSession.shared,
                         completion: @escaping (MarsRover?, Error?) -> Void) {
         
+        // What queue are we in? Most likely the main queue, unless we specify the queue.
+        
         let url = self.url(forInfoForRover: name)
+        
+        // @escaping allows the completion closure to finish after "fetchingMarsRover"
+        // Trailing closure syntax: allows us to ignore the label for the last parameter if its a closure. Anonymous function.
         fetch(from: url, using: session) { (dictionary: [String : MarsRover]?, error: Error?) in
-            guard let rover = dictionary?["photoManifest"] else {
+            
+            // Happening in another queue.
+            guard let rover = dictionary?["photo_manifest"] else {
                 completion(nil, error)
                 return
             }
@@ -44,6 +51,11 @@ class MarsRoverClient {
     private func fetch<T: Codable>(from url: URL,
                            using session: URLSession = URLSession.shared,
                            completion: @escaping (T?, Error?) -> Void) {
+        
+        // Anonymous function
+        // Calling completion from inside "fetch": completiong(possiblySomethingCodable, possibleError)
+        
+        
         session.dataTask(with: url) { (data, response, error) in
             if let error = error {
                 completion(nil, error)
@@ -56,7 +68,14 @@ class MarsRoverClient {
             }
             
             do {
+                // what type is T? Dictionary<String, MarsRover>
                 let jsonDecoder = MarsPhotoReference.jsonDecoder
+                // Decoding: The root object in the JSON -> Dictionary.
+                // What root objects can a valid JSON have? Array or dictionary
+                // Steps:
+                // 1. Going to Dictionary<String, MarsRover> and saying "Do you know how to decode a JSON dictionary with string keys? Yes
+                // 2. Does Dictionary<String, MarsRover> know how to decode the rest of the JSON? No, but MarsRover can and has it own decoder. But the dictionary<String, MarsRover> can't handle snakeCase.
+                // Dictionary<String, MarsRover> not part of MarsRover, so cant handle snakeCase.
                 let decodedObject = try jsonDecoder.decode(T.self, from: data)
                 completion(decodedObject, nil)
             } catch {

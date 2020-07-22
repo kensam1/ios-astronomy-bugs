@@ -11,12 +11,22 @@ import UIKit
 class Cache<Key: Hashable, Value> {
     
     func cache(value: Value, for key: Key) {
-        cache[key] = value
+        serialQueue.async { // default is async
+            self.cache[key] = value
+        }
     }
     
     func value(for key: Key) -> Value? {
-        return cache[key]
+        // value is returning, whatever sync is returning
+        // when we are returning something use sync
+        // return serialQueue.sync
+        serialQueue.sync {
+            return cache[key]
+        }
+    
     }
+    
+    private let serialQueue = DispatchQueue(label: "Cache Serial Queue")
     
     private var cache = [Key : Value]()
 }
